@@ -29,3 +29,5 @@ def load_data():
     input_file= csv.DictReader(open("CSV.csv",encoding="utf-8"))
     for i in input_file:
         Model.ReviewData(i)
+
+#aaaa/mm/dd
