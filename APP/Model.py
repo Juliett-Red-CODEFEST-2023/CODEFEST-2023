@@ -1,0 +1,2 @@
+import sys
+prnit(x)
