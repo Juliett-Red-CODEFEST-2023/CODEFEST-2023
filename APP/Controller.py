@@ -4,7 +4,9 @@ import Model
 import xlrd
 import csv
 import pandas as pd
-def load_data(file_name):
+import os
+import openpyxl
+def load_data():
     """
     Carga los datos de los archivos CSV en el modelo.
     Se crea un arco entre cada par de estaciones que
@@ -15,26 +17,15 @@ def load_data(file_name):
     """
     # open workbook by sheet index,
     # optional - sheet_by_index()
-    sheet = xlrd.open_workbook("CODEFEST-2023\Documents\""+file_name).sheet_by_index(0)
+    old_name = r"C:\Users\marti\OneDrive - Universidad de los andes\Escritorio\CODEFEST-2023\Documents\NOTICIAS_DE_LA_AMAZONIA_CODEFEST.xlsx"
+    
+    # Read the Excel file into a DataFrame
+    df = pd.read_excel(old_name)
 
-    # writer object is created
-    col = csv.writer(open("T.csv",
-                        'w',
-                        newline=""))
+    # Write the DataFrame to a CSV file
+    df.to_csv("CSV.csv", index=False)
 
-    # writing the data into csv file
-    for row in range(sheet.nrows):
-        # row by row write
-        # operation is perform
-        col.writerow(sheet.row_values(row))
-
-    # read csv file and convert
-    # into a dataframe object
-    df = pd.DataFrame(pd.read_csv("T.csv"))
-
-    # show the dataframe
-    df
-
-    return df
-
-    "descartar"
+    # Show the DataFrame
+    input_file= csv.DictReader(open("CSV.csv",encoding="utf-8"))
+    for i in input_file:
+        Model.ReviewData(i)
