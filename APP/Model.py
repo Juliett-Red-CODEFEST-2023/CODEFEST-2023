@@ -322,3 +322,30 @@ def getFrames(ruta_Video):
     video.release()
     print("Proceso finalizado.")
 
+def format_Fecha(fecha):
+    if fecha=='0':
+        return "Indefinido"
+    fecha_ = fecha.lower().strip(' ')
+    dia = None 
+    mes = None
+    año = None
+    meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
+    m_ = 1
+    for m in meses:
+        if m in fecha_:
+            mes = str(m_)
+            break
+        m_ += 1
+    año = fecha_[(len(fecha)-4):len(fecha)]
+    fecha_ = fecha_[0:(len(fecha)-4)]
+    for i in range(1,32):
+        i = str(i)
+        if i in fecha_:
+            dia = i
+    fecha_f = str(año)+'-'+str(mes)+'-'+str(dia)
+    if((dia == None)  or (mes == None) or (año == None)):
+            fecha_f = 'Indeterminado'
+    if len(fecha) == 19 and fecha[11:19]   == '00:00:00':
+        fecha_f = fecha[0:11]
+        
+    return fecha_f
