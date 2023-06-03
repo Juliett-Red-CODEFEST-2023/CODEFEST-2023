@@ -1,5 +1,3 @@
-#!pip3 install config
-
 import config
 import importlib
 from DISClib.ADT import list as lt
@@ -10,11 +8,17 @@ from flair.models import SequenceTagger
 import datetime
 import pandas as pd
 import csv
-!pip3 install flair
-!pip3 install python-dateutil
-!pip3 install config
+import pytesseract
+from PIL import Image
+import os
+import cv2
+from skimage import io
+import matplotlib.pyplot as plt
+import numpy as np
+import easyocr
+
 tagger = SequenceTagger.load("flair/ner-spanish-large")
-print("Hola")
+
 def datastructs():
     data_structs={}
     data_structs["mapa_ubicaciones"]=mp.newMap
@@ -118,10 +122,6 @@ def GetInfo(info):
                         if valor not in dic[atributo]:
                             dic[atributo].append(valor)
                         
-        #print('The following NER tags are found:')
-        #for entity in oracion.get_spans('ner'):
-            #pass
-            #print(entity)
     return dic
                        
 def p1_textos(input_type,text,data_structs,filename):
@@ -166,3 +166,159 @@ def p1_textos(input_type,text,data_structs,filename):
                 entry=mp.get(mapa_ubicaciones,text)
                 return me.getValue(entry)
             
+            
+def img_Info (img_Coord_N, img_Coord_W, img_Time): #parametros son listas de imagenes de donde se encuentra la información respectiva del lapso de tiempo en el que ubicó el objeto en cuestión con diferencial de medio segundo
+    i = 0
+    N = None
+    W = None
+    T = None
+    while (i<len(img_Coord_N)):
+        N_1 = pytesseract.image_to_string(Image.open(img_Coord_N[i]))  
+        W_1 = pytesseract.image_to_string(Image.open(img_Coord_W[i]))
+        T_1 = pytesseract.image_to_string(Image.open(img_Time[i]))
+        try:#Verificacion de que la informacion tomada de la captura haya sido  
+            N_ = N_1
+            N_ = N_.replace('°','')
+            N_ = N_.replace('\'','')
+            N_ = N_.replace('\"','')
+            N_ = N_.replace('.','')
+            Contr = int(N_)
+            if (len(N_) == 7):
+                N = N_1
+                W_ = W_1
+                W_ = W_.replace('°','')
+                W_ = W_.replace('\'','')
+                W_ = W_.replace('\"','')
+                W_ = W_.replace('.','')
+                Contr = str(W_)
+            if (len(W_) == 7):
+                W = W_1
+                T_ = T_1
+                T_ = T_.replace(':','')
+                T_ = T_.replace('/','')
+                Contr = str(N_)
+            if (len(N_) == 6 or len(N_) == 5):
+                T = T_1
+            i+=1
+        except: 
+            None
+        if ((N == None) or (W == None) or (T == None)):
+            return None
+
+    info = {'N': N,'W': W,'Time':T}
+    return info
+
+def isFlattt(imagen):
+    alpha = 255
+    res = True
+    # Convierte la imagen a una lista de valores de píxeles
+    rgb = cv2.cvtColor(imagen, cv2.COLOR_BGR2RGB)
+    # Divide la imagen en los canales R, G y B
+    r, g, b = cv2.split(rgb)
+    
+    vec_R = r.flatten()
+    vec_G = g.flatten()
+    vec_B = b.flatten()
+    
+    # Calcula la desviación estándar de los valores de los píxeles
+    std_R = np.std(vec_R, axis=0)
+    std_G = np.std(vec_G, axis=0)
+    std_B = np.std(vec_B, axis=0)
+    
+    if std_R < alpha or std_G < alpha or std_B < alpha:
+        res = False
+
+    return res
+
+def cropImage(image):
+    # Recorta la imagen usando la indexación de arrays en NumPy
+    aim = image[300:420, 536:746]
+    coord = image[42: 58, 946: 1228]
+    time = image[136:174, 22:96]
+    plt.imshow(aim)
+    return aim, coord, time
+
+def goodCrop(image):
+    aim, coord, time = cropImage(image)
+    
+def findText(imagen):
+    text = False
+    pi = 0.415
+    
+    # Convierte la imagen a una lista de valores de píxeles
+    rgb = cv2.cvtColor(imagen, cv2.COLOR_BGR2RGB)
+    # Divide la imagen en los canales R, G y B
+    r, g, b = cv2.split(rgb)
+    # Umbraliza el canal de color para evitar ruidos
+    gu = g < pi
+    
+    aimG, coordG, timeG = cropImage(gu)
+    
+    reader = easyocr.Reader(['en'])
+
+    strCoord = reader.readtext(coordG)
+    print(strCoord)
+    strTime = reader.readtext(timeG)
+    print(strTime)
+    if strCoord != None and strTime != None:
+        text = True
+        return text, strCoord, strTime
+    else:
+        return text
+    
+def getFrames(ruta_Video):
+    # Crea un directorio para las imágenes, si no existe
+    ext = ruta_Video.split("_")[1]
+    ext = ext.split(".")[0]
+    print(ext)
+    out = "frames_" + ext
+    
+    if not os.path.exists(out):
+        os.makedirs(out)
+        os.makedirs(out + "/crops")
+
+    # Abre el video
+    video = cv2.VideoCapture(ruta_Video)
+    
+    # Obtiene el número total de frames, 
+        #la tasa de frames por segundo 
+        #y calcula la duración a minutos.
+    minutes = video.get(cv2.CAP_PROP_FRAME_COUNT)/(video.get(cv2.CAP_PROP_FPS)*60)
+    print(minutes)
+
+    # Variable para llevar un registro del número de frame
+    frame_num = 1
+    # Variable para desplazar el registro del número de frame
+    frame_offset = 10
+    while len(os.listdir(out)) <= (10*minutes):
+        # Lee un frame del video
+
+        if frame_num % (300 + frame_offset) == frame_offset:
+            buffer, frame = video.read()
+            print("modulo 30 exitoso")
+            # Si el frame no es válido (por ejemplo, hemos llegado al final del video), 
+                # Si el frame no es válido y se tienen 2 imagenes por minuto, 
+                    #se sale del bucle 
+            if not buffer:
+                print("not buffer")
+                    # Si el frame no es válido y NO se tienen 2 imagenes por minuto,
+                        #Se reinicia el contador y se desplaza el offset
+                print("reinicia y hace offset")
+                frame_num = 1
+                frame_offset += 90
+
+            else:
+                    #if not isFlattt(frame):
+                    # Guarda el frame como una imagen JPEG
+                cv2.imwrite(out +'/frame{:04d}.jpg'.format(frame_num), frame)
+                print("Creado frame: ", frame_num)
+                aim, coord, time = cropImage(frame)
+                cv2.imwrite(out +'/crops{:04d}.jpg'.format(frame_num), aim)
+
+                    # Incrementa el número de frame
+        frame_num += 1
+
+    # Libera el video
+    video.release()
+    print("Proceso finalizado.")
+

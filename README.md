@@ -6,4 +6,14 @@ Developed by:
 2. Sebastían Beleño - js.beleno@uniandes.edu.co - @Seb-torregro
 3. Daniel Pedraza - d.pedrazag@uniandes.edu.co - @DanDrax42
 4. Martín Calderón - m.calderona@uniandes.edu.co - @martin10ca
-5. Steven Durán - - 
+5. Steven Durán - stevenduran930@gmail.com - @BISHOP-19
+
+In order to properly run these scripts, you will first need to run the following commands to download the required libraries and dependencies.
+
+!apt install tesseract-ocr -y
+!apt-get install tesseract-ocr-spa -y
+!pip install easyocr
+!pip3 install config
+!pip3 install flair
+!pip3 install python-dateutil
+!pip3 install config
