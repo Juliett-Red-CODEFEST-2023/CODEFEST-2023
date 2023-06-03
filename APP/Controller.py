@@ -1,7 +1,10 @@
 import csv
 import config as cf
 import Model
-def load_data(size):
+import xlrd
+import csv
+import pandas as pd
+def load_data(file_name):
     """
     Carga los datos de los archivos CSV en el modelo.
     Se crea un arco entre cada par de estaciones que
@@ -10,9 +13,28 @@ def load_data(size):
     addRouteConnection crea conexiones entre diferentes rutas
     servidas en una misma estación.
     """
-    archivo = cf.data_dir +"BA-Grey-Wolf-tracks-utf8-" +size+".csv"
-    lines_file = csv.DictReader(open(archivo, encoding="utf-8"),
-                                delimiter=",")
-    string=""
-    for i in lines_file:
-        string=Model.createstring(i)
+    # open workbook by sheet index,
+    # optional - sheet_by_index()
+    sheet = xlrd.open_workbook("CODEFEST-2023\Documents\""+file_name).sheet_by_index(0)
+
+    # writer object is created
+    col = csv.writer(open("T.csv",
+                        'w',
+                        newline=""))
+
+    # writing the data into csv file
+    for row in range(sheet.nrows):
+        # row by row write
+        # operation is perform
+        col.writerow(sheet.row_values(row))
+
+    # read csv file and convert
+    # into a dataframe object
+    df = pd.DataFrame(pd.read_csv("T.csv"))
+
+    # show the dataframe
+    df
+
+    return df
+
+    "descartar"

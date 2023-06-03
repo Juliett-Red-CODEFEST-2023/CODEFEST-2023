@@ -1,2 +1,1 @@
-import sys
-prnit(x)
+
