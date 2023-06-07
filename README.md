@@ -10,8 +10,13 @@ Developed by:
 
 In order to properly run these scripts, you will first need to run the following commands to download the required libraries and dependencies.
 
+For linux machines:
+
 !apt install tesseract-ocr -y
 !apt-get install tesseract-ocr-spa -y
+
+Python libraries needed:
+
 !pip install easyocr
 !pip3 install config
 !pip3 install flair
